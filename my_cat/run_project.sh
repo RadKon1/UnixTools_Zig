@@ -1,2 +1,1 @@
-make
-./zig-out/bin/my_cat test_file2.txt
+./zig-out/bin/my_cat test_file.txt -b
