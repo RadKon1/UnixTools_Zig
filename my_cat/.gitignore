@@ -1,0 +1,5 @@
+/.zig-cache
+/zig-out
+run_project.sh
+test_file.txt
+test_file2.txt
