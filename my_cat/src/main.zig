@@ -39,7 +39,7 @@ pub fn main(init: std.process.Init) !void {
     };
     defer file.close(init.io);
 
-    const read_buffer: []u8 = try std.heap.page_allocator.alloc(u8, 1024);
+    const read_buffer: []u8 = try std.heap.page_allocator.alloc(u8, 1024 * 1024);
     defer std.heap.page_allocator.free(read_buffer);
 
     var reader = file.reader(init.io, read_buffer);
