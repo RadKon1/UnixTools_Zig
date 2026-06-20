@@ -1,1 +1,1 @@
-./zig-out/bin/my_ls -b -n -c
+./zig-out/bin/my_ls /bin -l -a
