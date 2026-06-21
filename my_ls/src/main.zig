@@ -38,7 +38,7 @@ pub fn main(init: std.process.Init) !void {
         dir = std.Io.Dir.cwd();
     } else {
         if (args[1][0] == '/' or args[1][0] == '~') {
-            dir = std.Io.Dir.openDirAbsolute(init.io, args[1], .{ .access_sub_paths = true }) catch |err| switch (err) {
+            dir = std.Io.Dir.openDirAbsolute(init.io, args[1], .{ .access_sub_paths = true, .iterate = true }) catch |err| switch (err) {
                 error.FileNotFound => {
                     print("File not found\n", .{});
                     return;
@@ -46,7 +46,7 @@ pub fn main(init: std.process.Init) !void {
                 else => return err,
             };
         } else {
-            dir = std.Io.Dir.openDir(std.Io.Dir.cwd(), init.io, args[1], .{ .access_sub_paths = true }) catch |err| switch (err) {
+            dir = std.Io.Dir.openDir(std.Io.Dir.cwd(), init.io, args[1], .{ .access_sub_paths = true, .iterate = true }) catch |err| switch (err) {
                 error.FileNotFound => {
                     print("File not found\n", .{});
                     return;
@@ -56,8 +56,15 @@ pub fn main(init: std.process.Init) !void {
         }
     }
 
-    print("{any}\n", .{dir});
-    print("Current dir is cwd: {any}\n", .{ls_current_dir});
+    // here we access all files or directories inside dir
+    // then based on flags we print properly output
+    print("Is ls cwd: {}\n", .{ls_current_dir});
+
+    const dir_data = try getDirectoryData(dir, allocator, init.io);
+
+    for (dir_data.items) |dir_entry| {
+        print("{s}\n", .{dir_entry});
+    }
 }
 
 fn getFlags(flags: *[][]const u8, args: []const [:0]const u8) usize {
@@ -81,4 +88,17 @@ fn compareStrArgs(str1: []const u8, str2: []const u8) bool {
         }
     }
     return true;
+}
+
+fn getDirectoryData(directory: std.Io.Dir, allocator: std.mem.Allocator, io: std.Io) !std.ArrayList([]const u8) {
+    var sources = try std.ArrayList([]const u8).initCapacity(allocator, 4096);
+
+    var iterator = directory.iterate();
+
+    while (try iterator.next(io)) |entry| {
+        const path_copy = try allocator.dupe(u8, entry.name);
+        errdefer allocator.free(path_copy);
+        try sources.append(allocator, path_copy);
+    }
+    return sources;
 }
